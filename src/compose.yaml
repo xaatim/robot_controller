@@ -1,20 +1,44 @@
+version: 
 services:
   ros2:
     build: .
     image: robot:latest
     container_name: ros2
+
+    # Equivalent to -v ${PWD}:/home
     volumes:
       - ${PWD}:/home
       - /tmp/.X11-unix:/tmp/.X11-unix:rw
       - ${XAUTHORITY}:${XAUTHORITY}
+
     working_dir: /home
+
     environment:
       - DISPLAY=${DISPLAY}
       - WAYLAND_DISPLAY=${WAYLAND_DISPLAY}
       - QT_QPA_PLATFORM=xcb
+
     stdin_open: true
     tty: true
-    privileged: true
+
+    # Equivalent to --user ros
+    user: "ros"
+
+    # Equivalent to --network=host
+    network_mode: "host"
+
+    # Equivalent to --ipc=host
+    ipc: "host"
+
+    # These are Linux-only. On Docker Desktop (Windows) they won’t work,
+    # but leaving them here won’t break Linux usage.
     devices:
       - /dev/video0:/dev/video0
-    command: bash && pwd && colcon build
+    device_cgroup_rules:
+      - 'c *:* rmw'
+
+    # Privileged mode (covers many device permissions anyway)
+    privileged: true
+
+    command: >
+      bash -c "pwd && colcon build"
